@@ -29,7 +29,7 @@ def measure_duration(steps, cores):
 
 
 def main():
-    steps = int(1e7)
+    steps = int(1e9)
     cores = [1, 2, 4, 8, 16, 32]
     durations = [measure_duration(steps, core) for core in cores]
     theoretical_durations = [(durations[0] / core) for core in cores]
