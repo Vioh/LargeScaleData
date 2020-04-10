@@ -43,7 +43,7 @@ def compute_pi_main(workers, accuracy, batchsize):
     s_total = 0
     tasks_queue = mp.Queue() # each task (or batch) is represented by the batchsize
     done_queue = mp.Queue()  # result of each task is the number of successes in that batch
-    processes = mp.Pool(workers, compute_pi_worker, (tasks_queue, done_queue))
+    processes = mp.Pool(workers, initializer=compute_pi_worker, initargs=(tasks_queue, done_queue))
 
     for _ in range(workers):
         tasks_queue.put(batchsize)
@@ -73,7 +73,7 @@ def plot(accuracy, batchsize):
     Plot 4 different graphs (speedup, time, steps, errors) against different numbers of workers.
     """
     workers = [1, 2, 4, 8, 16, 32]
-    durations = []
+    actual_durations = []
     errors = []
     steps = []
 
@@ -81,12 +81,16 @@ def plot(accuracy, batchsize):
         print("============= Measuring duration for {} workers".format(w))
         start_time = time.time()
         pi_est, error, n_total = compute_pi_main(w, accuracy, batchsize)
-        durations.append(time.time() - start_time)
+        duration = time.time() - start_time
+        actual_durations.append(duration)
         errors.append(error)
         steps.append(n_total)
+        print("Duration: {} seconds".format(duration))
 
-    theoretical_durations = [(durations[0] / w) for w in workers]
-    speedups = [(durations[0] / duration) for duration in durations]
+    duration_per_step = actual_durations[0] / steps[0]
+    theoretical_durations = [(duration_per_step * s / w) for s, w in zip(steps, workers)]
+    theoretical_speedups = [(theoretical_durations[0] / duration) for duration in theoretical_durations]
+    actual_speedups = [(actual_durations[0] / duration) for duration in actual_durations]
 
     fig, axes = plt.subplots(2, 2)
     fig.set_size_inches(16, 12)
@@ -96,8 +100,8 @@ def plot(accuracy, batchsize):
     axes[0,0].set_xscale("log", basex=2)
     axes[0,0].set_xlabel("Workers")
     axes[0,0].set_ylabel("Speedup")
-    axes[0,0].plot(workers, workers, "ro-", label="Theoretical speedup")
-    axes[0,0].plot(workers, speedups, "bo-", label="Actual speedup")
+    axes[0,0].plot(workers, theoretical_speedups, "ro-", label="Theoretical speedup")
+    axes[0,0].plot(workers, actual_speedups, "bo-", label="Actual speedup")
     axes[0,0].legend()
 
     axes[0,1].grid()
@@ -105,7 +109,7 @@ def plot(accuracy, batchsize):
     axes[0,1].set_xlabel("Workers")
     axes[0,1].set_ylabel("Time taken (s)")
     axes[0,1].plot(workers, theoretical_durations, "ro-", label="Theoretical time")
-    axes[0,1].plot(workers, durations, "bo-", label="Actual time")
+    axes[0,1].plot(workers, actual_durations, "bo-", label="Actual time")
     axes[0,1].legend()
 
     axes[1,0].grid()
