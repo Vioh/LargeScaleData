@@ -1,4 +1,3 @@
-import argparse
 import logging
 import argparse
 import numpy as np
@@ -9,6 +8,12 @@ import multiprocessing as mp
 
 
 def generateData(n, c):
+    """
+    Generates n samples in clusters, bidimensional
+    :param n: number of samples
+    :param c: number of classes
+    :return: x and y values of generated samples
+    """
     logging.info(f"Generating {n} samples in {c} classes")
     X, y = make_blobs(n_samples=n, centers=c, cluster_std=1.7, shuffle=False,
                       random_state=2122)
@@ -16,13 +21,27 @@ def generateData(n, c):
 
 
 def nearestCentroid(datum, centroids):
-    # norm(a-b) is Euclidean distance, matrix - vector computes difference
-    # for all rows of matrix
+    """
+    norm(a-b) is Euclidean distance, matrix - vector computes difference
+    for all rows of matrix
+    :param datum: single data point
+    :param centroids: coordinates of clusters centroids
+    :return: index of closest cluster, distance to
+             closest cluster
+    """
     dist = np.linalg.norm(centroids - datum, axis=1)
     return np.argmin(dist), np.min(dist)
 
 
 def kmeans(k, centroids, data, total_variation):
+    """
+    Kmeans for each single worker. Receives a batch of the
+    dataset and the centroids, calculates the closest centroid to
+    each data point and calculates cluster sizes and variation
+    :param k: k for kmeans
+    :param centroids: the clusters' centroids
+    :param data: batch of the dataset
+    """
     logging.debug("Initial centroids\n", centroids)
     N = len(data)
     # The cluster index: c[i] = j indicates that i-th datum is in j-th cluster
@@ -41,6 +60,15 @@ def kmeans(k, centroids, data, total_variation):
 
 
 def recompute_centroids(assignment, data, clusters):
+    """
+    Method to recompute centroids in multiprocessing.
+    Not fully implemented.
+    :param assignment: list of assigned centroid to each
+                       data point
+    :param data: batch of the dataset
+    :param clusters: size of each cluster
+    :return: new centroids
+    """
     centroids = np.zeros((3, 2))  # This fixes the dimension to 2
     for i in range(len(data)):
         centroids[assignment[i]] += data[i]
@@ -49,6 +77,10 @@ def recompute_centroids(assignment, data, clusters):
 
 
 def kmean_multipro(args):
+    """
+    Multiprocesses kmeans, recollects information from each
+    process, plots scatter plot 
+    """
     if args.verbose:
         logging.basicConfig(format='# %(message)s', level=logging.INFO)
     if args.debug:
