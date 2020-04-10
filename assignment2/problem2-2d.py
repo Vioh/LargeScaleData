@@ -79,7 +79,7 @@ def recompute_centroids(assignment, data, clusters):
 def kmean_multipro(args):
     """
     Multiprocesses kmeans, recollects information from each
-    process, plots scatter plot 
+    process, plots scatter plot
     """
     if args.verbose:
         logging.basicConfig(format='# %(message)s', level=logging.INFO)
@@ -88,9 +88,10 @@ def kmean_multipro(args):
 
     np.random.seed(50)
     workers = args.workers
-    k = args.classes
+    k = args.k_clusters
+    classes = args.classes
     n_iter = args.iterations
-    X = generateData(args.samples, k)
+    X = generateData(args.samples, args.classes)
     N = len(X)
     centroids = X[np.random.choice(np.array(range(N)), size=k, replace=False)]
 
@@ -105,7 +106,8 @@ def kmean_multipro(args):
         result = p.starmap(kmeans, [(k, centroids, x, t_var_tot) for x in X_splits])
         assignments, cluster_sizes, tot_var, d_var = zip(*result)
         assignment_tot = []
-        cluster_tot = np.array([[0], [0], [0]])
+        cluster_tot = [[0] for _ in range(k)]
+        cluster_tot = np.array(cluster_tot)
         d_var_tot = -t_var_tot
         t_var_tot = sum(tot_var)
         d_var_tot += t_var_tot
@@ -141,7 +143,7 @@ if __name__ == "__main__":
     parser.add_argument('--workers', '-w',
                         default='1',
                         type = int,
-                        help='Number of parallel processes to use (NOT IMPLEMENTED)')
+                        help='Number of parallel processes to use')
     parser.add_argument('--k_clusters', '-k',
                         default='3',
                         type = int,
