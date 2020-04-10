@@ -33,7 +33,7 @@ def nearestCentroid(datum, centroids):
     return np.argmin(dist), np.min(dist)
 
 
-def kmeans(k, centroids, data, total_variation):
+def kmeans(k, centroids, data):
     """
     Kmeans for each single worker. Receives a batch of the
     dataset and the centroids, calculates the closest centroid to
@@ -53,10 +53,8 @@ def kmeans(k, centroids, data, total_variation):
         c[i] = cluster
         cluster_sizes[cluster] += 1
         variation[cluster] += dist ** 2
-    delta_variation = -total_variation
     total_variation = sum(variation)
-    delta_variation += total_variation
-    return c, cluster_sizes, total_variation, delta_variation
+    return c, cluster_sizes, total_variation
 
 
 def recompute_centroids(assignment, data, clusters):
@@ -102,11 +100,10 @@ def kmean_multipro(args, workers):
     t_var_tot = 0.0
 
     for j in range(n_iter):
-        result = p.starmap(kmeans, [(k, centroids, x, t_var_tot) for x in X_splits])
-        assignments, cluster_sizes, tot_var, d_var = zip(*result)
+        result = p.starmap(kmeans, [(k, centroids, x) for x in X_splits])
+        assignments, cluster_sizes, tot_var = zip(*result)
         assignment_tot = []
-        cluster_tot = [[0] for _ in range(k)]
-        cluster_tot = np.array(cluster_tot)
+        cluster_tot = np.array([[0] for _ in range(k)])
         d_var_tot = -t_var_tot
         t_var_tot = sum(tot_var)
         d_var_tot += t_var_tot
@@ -129,10 +126,10 @@ def kmean_multipro(args, workers):
     end = time.time()
     duration = end - start
     print(f"Time elapsed with {workers} workers and {n_iter} iterations: {duration} seconds.")
-    # fig, axes = plt.subplots(nrows=1, ncols=1)
-    # axes.scatter(X[:, 0], X[:, 1], c=assignment_tot, alpha=0.2)
-    # plt.title("k-means result")
-    # plt.show()
+    fig, axes = plt.subplots(nrows=1, ncols=1)
+    axes.scatter(X[:, 0], X[:, 1], c=assignment_tot, alpha=0.2)
+    plt.title("k-means result")
+    plt.show()
     return duration
 
 
