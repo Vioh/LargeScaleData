@@ -76,7 +76,7 @@ def recompute_centroids(assignment, data, clusters):
     return centroids
 
 
-def kmean_multipro(args):
+def kmean_multipro(args, workers):
     """
     Multiprocesses kmeans, recollects information from each
     process, plots scatter plot
@@ -87,7 +87,6 @@ def kmean_multipro(args):
         logging.basicConfig(format='# %(message)s', level=logging.DEBUG)
 
     np.random.seed(50)
-    workers = args.workers
     k = args.k_clusters
     classes = args.classes
     n_iter = args.iterations
@@ -128,10 +127,42 @@ def kmean_multipro(args):
         logging.info(f"Iteration {(j + 1)}: total variation: {t_var_tot}, delta variation: {d_var_tot}")
 
     end = time.time()
-    print(f"Time elapsed with {workers} workers and {n_iter} iterations: {end - start} seconds.")
-    fig, axes = plt.subplots(nrows=1, ncols=1)
-    axes.scatter(X[:, 0], X[:, 1], c=assignment_tot, alpha=0.2)
-    plt.title("k-means result")
+    duration = end - start
+    print(f"Time elapsed with {workers} workers and {n_iter} iterations: {duration} seconds.")
+    # fig, axes = plt.subplots(nrows=1, ncols=1)
+    # axes.scatter(X[:, 0], X[:, 1], c=assignment_tot, alpha=0.2)
+    # plt.title("k-means result")
+    # plt.show()
+    return duration
+
+
+def main_multiprocessing(args):
+    cores = [1, 2, 4, 8, 16, 32]
+    durations = [kmean_multipro(args, core) for core in cores]
+    theoretical_durations = [(durations[0] / core) for core in cores]
+    speedups = [(durations[0] / duration) for duration in durations]
+
+    fig, axes = plt.subplots(1, 2)
+    fig.set_size_inches(12, 6)
+    fig.suptitle(f"Data samples: {args.samples}, iterations: {args.iterations}")
+
+    axes[0].grid()
+    axes[0].set_xscale("log", basex=2)
+    axes[0].set_xlabel("Cores")
+    axes[0].set_ylabel("Speedup")
+    axes[0].plot(cores, cores, "ro-", label="Theoretical speedup")
+    axes[0].plot(cores, speedups, "bo-", label="Actual speedup")
+    axes[0].legend()
+
+    axes[1].grid()
+    axes[1].set_xscale("log", basex=2)
+    axes[1].set_xlabel("Cores")
+    axes[1].set_ylabel("Time taken (s)")
+    axes[1].plot(cores, theoretical_durations, "ro-", label="Theoretical time")
+    axes[1].plot(cores, durations, "bo-", label="Actual time")
+    axes[1].legend()
+
+    plt.savefig("problem2-2d.png")
     plt.show()
 
 
@@ -170,4 +201,4 @@ if __name__ == "__main__":
                         action='store_true',
                         help='Print debugging output')
     args = parser.parse_args()
-    kmean_multipro(args)
+    main_multiprocessing(args)
