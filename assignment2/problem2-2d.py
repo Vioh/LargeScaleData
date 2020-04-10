@@ -22,64 +22,79 @@ def nearestCentroid(datum, centroids):
     return np.argmin(dist), np.min(dist)
 
 
-def kmeans(k, centroids, data, nr_iter=100):
+def kmeans(k, centroids, data, total_variation):
     logging.debug("Initial centroids\n", centroids)
     N = len(data)
-
     # The cluster index: c[i] = j indicates that i-th datum is in j-th cluster
     c = np.zeros(N, dtype=int)
-
-    logging.info("Iteration\tVariation\tDelta Variation")
-    total_variation = 0.0
-    for j in range(nr_iter):
-        logging.debug("=== Iteration %d ===" % (j + 1))
-
-        # Assign data points to nearest centroid
-        variation = np.zeros(k)
-        cluster_sizes = np.zeros(k, dtype=int)
-        for i in range(N):
-            cluster, dist = nearestCentroid(data[i], centroids)
-            c[i] = cluster
-            cluster_sizes[cluster] += 1
-            variation[cluster] += dist ** 2
-        delta_variation = -total_variation
-        total_variation = sum(variation)
-        delta_variation += total_variation
-        logging.info("%3d\t\t%f\t%f" % (j, total_variation, delta_variation))
-    return c, cluster_sizes
+    variation = np.zeros(k)
+    cluster_sizes = np.zeros(k, dtype=int)
+    for i in range(N):
+        cluster, dist = nearestCentroid(data[i], centroids)
+        c[i] = cluster
+        cluster_sizes[cluster] += 1
+        variation[cluster] += dist ** 2
+    delta_variation = -total_variation
+    total_variation = sum(variation)
+    delta_variation += total_variation
+    return c, cluster_sizes, total_variation, delta_variation
 
 
-def recompute_centroids(assignment, data, clusters, n_iter=100):
-    for j in range(n_iter):
-        centroids = np.zeros((3, 2))  # This fixes the dimension to 2
-        for i in range(len(data)):
-            centroids[assignment[i]] += data[i]
-        centroids = centroids / clusters.reshape(-1, 1)
+def recompute_centroids(assignment, data, clusters):
+    centroids = np.zeros((3, 2))  # This fixes the dimension to 2
+    for i in range(len(data)):
+        centroids[assignment[i]] += data[i]
+    centroids = centroids / clusters.reshape(-1, 1)
     return centroids
 
 
 def kmean_multipro(args):
+    if args.verbose:
+        logging.basicConfig(format='# %(message)s', level=logging.INFO)
+    if args.debug:
+        logging.basicConfig(format='# %(message)s', level=logging.DEBUG)
+
+    np.random.seed(50)
     workers = args.workers
-    X = generateData(args.samples, args.classes)
+    k = args.classes
+    n_iter = args.iterations
+    X = generateData(args.samples, k)
     N = len(X)
-    centroids = X[np.random.choice(np.array(range(N)), size=args.classes, replace=False)]
+    centroids = X[np.random.choice(np.array(range(N)), size=k, replace=False)]
+
+    # Split the training set by number of workers
     X_splits = [X[i:i + int(len(X) / workers)] for i in range(0, len(X), int(len(X) / workers))]
-    assignment_tot = []
-    cluster_tot = np.array([[0], [0], [0]])
+
     start = time.time()
     p = mp.Pool(workers)
-    result = p.starmap(kmeans, [(3, centroids, x) for x in X_splits])
-    assignments, cluster_sizes = zip(*result)
-    for num in assignments:
-        for n in num:
-            assignment_tot.append(n)
-    for cl in cluster_sizes:
-        for idx, val in enumerate(cl):
-            cluster_tot[idx][0] += val
-    centroids = p.starmap(recompute_centroids, [(assignment_tot, x, cluster_tot) for x in X_splits])
+    t_var_tot = 0.0
+
+    for j in range(n_iter):
+        result = p.starmap(kmeans, [(k, centroids, x, t_var_tot) for x in X_splits])
+        assignments, cluster_sizes, tot_var, d_var = zip(*result)
+        assignment_tot = []
+        cluster_tot = np.array([[0], [0], [0]])
+        d_var_tot = -t_var_tot
+        t_var_tot = sum(tot_var)
+        d_var_tot += t_var_tot
+        # Recollect assignments of data points
+        # to corresponding clusters
+        for num in assignments:
+            for n in num:
+                assignment_tot.append(n)
+        # Recollect the size of the clusters
+        for cl in cluster_sizes:
+            for idx, val in enumerate(cl):
+                cluster_tot[idx][0] += val
+        # centroids = p.starmap(recompute_centroids, [(assignment_tot, x, cluster_tot) for x in X_splits])
+        centroids = np.zeros((k, 2))  # This fixes the dimension to 2
+        for i in range(len(X)):
+            centroids[assignment_tot[i]] += X[i]
+        centroids = centroids / cluster_tot.reshape(-1, 1)
+        logging.info(f"Iteration {(j + 1)}: total variation: {t_var_tot}, delta variation: {d_var_tot}")
 
     end = time.time()
-    print(f"Time elapsed with {workers} workers: {end - start} seconds.")
+    print(f"Time elapsed with {workers} workers and {n_iter} iterations: {end - start} seconds.")
     fig, axes = plt.subplots(nrows=1, ncols=1)
     axes.scatter(X[:, 0], X[:, 1], c=assignment_tot, alpha=0.2)
     plt.title("k-means result")
