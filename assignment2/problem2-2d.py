@@ -95,6 +95,7 @@ def kmean_multipro(args, workers):
 
     start = time.time()
     p = mp.Pool(workers)
+    p2 = mp.Pool(workers)
     t_var_tot = 0.0
 
     for j in range(n_iter):
@@ -122,7 +123,6 @@ def kmean_multipro(args, workers):
         # centroids = centroids / cluster_tot.reshape(-1, 1)
 
         # Parallelizing
-        p.terminate()
         p.join()
         results = p.starmap(recompute_centroids, [(k, assignment_tot, x, idx) for idx, x in enumerate(X_splits)])
         # Recalculate new centroids on data from
