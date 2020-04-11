@@ -116,22 +116,26 @@ def kmean_multipro(args, workers):
                 cluster_tot[idx][0] += val
 
         # Not parallelizing
-        centroids = np.zeros((k, 2))  # This fixes the dimension to 2
-        for i in range(len(X)):
-            centroids[assignment_tot[i]] += X[i]
-        centroids = centroids / cluster_tot.reshape(-1, 1)
+        # centroids = np.zeros((k, 2))  # This fixes the dimension to 2
+        # for i in range(len(X)):
+        #     centroids[assignment_tot[i]] += X[i]
+        # centroids = centroids / cluster_tot.reshape(-1, 1)
 
         # Parallelizing
-        # results = p.starmap(recompute_centroids, [(k, assignment_tot, x, idx) for idx, x in enumerate(X_splits)])
+        p.terminate()
+        p.join()
+        results = p.starmap(recompute_centroids, [(k, assignment_tot, x, idx) for idx, x in enumerate(X_splits)])
         # Recalculate new centroids on data from
         # all workers
-        # for m in range(1, workers):
-        #     for n in range(k):
-        #         results[0][n][0] += results[m][n][0]
-        #         results[0][n][1] += results[m][n][1]
-        # centroids = results[0] / cluster_tot.reshape(-1, 1)
+        for m in range(1, workers):
+            for n in range(k):
+                results[0][n][0] += results[m][n][0]
+                results[0][n][1] += results[m][n][1]
+        centroids = results[0] / cluster_tot.reshape(-1, 1)
         logging.info(f"Iteration {(j + 1)}: total variation: {t_var_tot}, delta variation: {d_var_tot}")
 
+    p.join()
+    p.close()
     end = time.time()
     duration = end - start
     print(f"Time elapsed with {workers} workers and {n_iter} iterations: {duration} seconds.")
