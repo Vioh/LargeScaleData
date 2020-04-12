@@ -66,9 +66,8 @@ def recompute_centroids(k, assignment, data, idx):
     :return: new centroids
     """
     centroids = np.zeros((k, 2))  # This fixes the dimension to 2
-    start = idx * len(data)
-    for i in range(start, start + len(data)):
-        centroids[assignment[i]] += data[i - start]
+    for i in range(len(data)):
+        centroids[assignment[i]] += data[i]
     return centroids
 
 
@@ -91,11 +90,14 @@ def kmean_multipro(args, workers):
     centroids = X[np.random.choice(np.array(range(N)), size=k, replace=False)]
 
     # Split the training set by number of workers
-    X_splits = [X[i:i + int(len(X) / workers)] for i in range(0, len(X), int(len(X) / workers))]
+    #X_splits = [X[i:i + int(len(X) / workers)] for i in range(0, len(X), int(len(X) / workers))]
+    X_splits = np.array_split(X,workers)
+
+    assignments = ()
+    assignment_tot = []
 
     start = time.time()
     p = mp.Pool(workers)
-    p2 = mp.Pool(workers)
     t_var_tot = 0.0
 
     for j in range(n_iter):
@@ -106,11 +108,7 @@ def kmean_multipro(args, workers):
         d_var_tot = -t_var_tot
         t_var_tot = sum(tot_var)
         d_var_tot += t_var_tot
-        # Recollect assignments of data points
-        # to corresponding clusters
-        for num in assignments:
-            for n in num:
-                assignment_tot.append(n)
+
         # Recollect the size of the clusters
         for cl in cluster_sizes:
             for idx, val in enumerate(cl):
@@ -123,8 +121,7 @@ def kmean_multipro(args, workers):
         # centroids = centroids / cluster_tot.reshape(-1, 1)
 
         # Parallelizing
-        p.join()
-        results = p.starmap(recompute_centroids, [(k, assignment_tot, x, idx) for idx, x in enumerate(X_splits)])
+        results = p.starmap(recompute_centroids, [(k, assignments[idx], x, idx) for idx, x in enumerate(X_splits)])
         # Recalculate new centroids on data from
         # all workers
         for m in range(1, workers):
@@ -134,8 +131,13 @@ def kmean_multipro(args, workers):
         centroids = results[0] / cluster_tot.reshape(-1, 1)
         logging.info(f"Iteration {(j + 1)}: total variation: {t_var_tot}, delta variation: {d_var_tot}")
 
+    p.terminate()
     p.join()
-    p.close()
+    # Recollect assignments of data points
+    # to corresponding clusters
+    for num in assignments:
+        for n in num:
+            assignment_tot.append(n)
     end = time.time()
     duration = end - start
     print(f"Time elapsed with {workers} workers and {n_iter} iterations: {duration} seconds.")
@@ -172,7 +174,7 @@ def main_multiprocessing(args):
     axes[1].plot(cores, durations, "bo-", label="Actual time")
     axes[1].legend()
 
-    plt.savefig("problem2-2d.png")
+    plt.savefig("problem2-2d-ver2.png")
     plt.show()
 
 
