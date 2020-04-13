@@ -54,21 +54,10 @@ def kmeans(k, centroids, data):
         cluster_sizes[cluster] += 1
         variation[cluster] += dist ** 2
     total_variation = sum(variation)
-    return c, cluster_sizes, total_variation
-
-
-def recompute_centroids(k, assignment, data, idx):
-    """
-    Method to recompute centroids in multiprocessing.
-    :param assignment: list of assigned centroid to each
-                       data point
-    :param data: batch of the dataset
-    :return: new centroids
-    """
     centroids = np.zeros((k, 2))  # This fixes the dimension to 2
     for i in range(len(data)):
-        centroids[assignment[i]] += data[i]
-    return centroids
+        centroids[c[i]] += data[i]
+    return c, cluster_sizes, total_variation, centroids
 
 
 def kmean_multipro(args, workers):
@@ -90,7 +79,7 @@ def kmean_multipro(args, workers):
     centroids = X[np.random.choice(np.array(range(N)), size=k, replace=False)]
 
     # Split the training set by number of workers
-    X_splits = [X[i:i + int(len(X) / workers)] for i in range(0, len(X), int(len(X) / workers))]
+    X_splits = np.array_split(X, workers)
 
     assignments = ()
     assignment_tot = []
@@ -100,8 +89,7 @@ def kmean_multipro(args, workers):
 
     for j in range(n_iter):
         result = p.starmap(kmeans, [(k, centroids, x) for x in X_splits])
-        assignments, cluster_sizes, tot_var = zip(*result)
-        assignment_tot = []
+        assignments, cluster_sizes, tot_var, results = zip(*result)
         cluster_tot = np.array([[0] for _ in range(k)])
         d_var_tot = -t_var_tot
         t_var_tot = sum(tot_var)
@@ -112,14 +100,6 @@ def kmean_multipro(args, workers):
             for idx, val in enumerate(cl):
                 cluster_tot[idx][0] += val
 
-        # Not parallelizing
-        # centroids = np.zeros((k, 2))  # This fixes the dimension to 2
-        # for i in range(len(X)):
-        #     centroids[assignment_tot[i]] += X[i]
-        # centroids = centroids / cluster_tot.reshape(-1, 1)
-
-        # Parallelizing
-        results = p.starmap(recompute_centroids, [(k, assignments[idx], x, idx) for idx, x in enumerate(X_splits)])
         # Recalculate new centroids on data from
         # all workers
         for m in range(1, workers):
@@ -131,7 +111,7 @@ def kmean_multipro(args, workers):
 
     p.terminate()
     p.join()
-    # Recollect assignments of data points
+    # Recollect all assignments of data points
     # to corresponding clusters
     for num in assignments:
         for n in num:
