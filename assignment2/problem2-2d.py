@@ -119,10 +119,11 @@ def kmean_multipro(args, workers):
     end = time.time()
     duration = end - start
     print(f"Time elapsed with {workers} workers and {n_iter} iterations: {duration} seconds.")
-    # fig, axes = plt.subplots(nrows=1, ncols=1)
-    # axes.scatter(X[:, 0], X[:, 1], c=assignment_tot, alpha=0.2)
-    # plt.title("k-means result")
-    # plt.show()
+    fig, axes = plt.subplots(nrows=1, ncols=1)
+    axes.scatter(X[:, 0], X[:, 1], c=assignment_tot, alpha=0.2)
+    plt.title("k-means result")
+    plt.show()
+
     return duration
 
 
@@ -131,6 +132,8 @@ def main_multiprocessing(args):
     durations = [kmean_multipro(args, core) for core in cores]
     theoretical_durations = [(durations[0] / core) for core in cores]
     speedups = [(durations[0] / duration) for duration in durations]
+    cal_speedups = [1/(0.01 + (0.99 / core)) for core in cores]
+    cal_durations = [(durations[0] / (core * 0.99)) for core in cores]
 
     fig, axes = plt.subplots(1, 2)
     fig.set_size_inches(12, 6)
@@ -141,6 +144,7 @@ def main_multiprocessing(args):
     axes[0].set_xlabel("Cores")
     axes[0].set_ylabel("Speedup")
     axes[0].plot(cores, cores, "ro-", label="Theoretical speedup")
+    axes[0].plot(cores, cal_speedups, "yo-", label="Theoretical speedup for 99% parall. code")
     axes[0].plot(cores, speedups, "bo-", label="Actual speedup")
     axes[0].legend()
 
@@ -149,6 +153,7 @@ def main_multiprocessing(args):
     axes[1].set_xlabel("Cores")
     axes[1].set_ylabel("Time taken (s)")
     axes[1].plot(cores, theoretical_durations, "ro-", label="Theoretical time")
+    axes[1].plot(cores, cal_durations, "yo-", label="Theoretical time for 99% parall. code")
     axes[1].plot(cores, durations, "bo-", label="Actual time")
     axes[1].legend()
 
