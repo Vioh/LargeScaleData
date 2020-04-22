@@ -28,8 +28,7 @@ def make_histogram(values, bin_num):
     step = float(value_range) / float(bin_num - 1)
     bins = values.map(lambda x: math.floor((x - min_value) / step)) \
                  .map(lambda x: (x, 1)).reduceByKey(lambda x, y: x + y) \
-                 .collect()
-
+                 .sortByKey().collect()
     return bins, min_value, step
 
 
@@ -42,7 +41,6 @@ def run_workers(workers):
     print("{0:20s} {1:-3.2f}".format("Standard deviation", std))
     bins, mini, step = make_histogram(val, 10)
     print("{0:11s} {1:5s}".format("Bin range", "Occurrences"))
-    bins.sort()
     for tuple in bins:
         print("{0:.2f} - {1:.2f} {2:-5d}".format(mini + tuple[0] * step, (mini + tuple[0] * step)
                                                  + step - 0.0001, tuple[1]))

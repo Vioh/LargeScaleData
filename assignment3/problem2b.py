@@ -11,8 +11,7 @@ def start_process(workers, file_name):
 
 
 def calculate_median(values, length):
-    values = values.collect()
-    values.sort()
+    values = values.sortBy(lambda x: x).collect()
     if length % 2 == 0:
         median = (values[int((length / 2) - 1)] + values[int(length / 2)]) / 2
     else:
