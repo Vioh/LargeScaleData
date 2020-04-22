@@ -1,5 +1,3 @@
-import numpy as np
-import math
 from pyspark import SparkContext
 import time
 import matplotlib.pyplot as plt
@@ -12,40 +10,21 @@ def start_process(workers, file_name):
     return values, distributed_file.count(), sc
 
 
-def calculate_mean(values, length):
-    return values.sum() / length
-
-
-def calculate_std(values, mean, length):
-    std_sum = values.map(lambda x: (x - mean)**2).sum()
-    return np.sqrt(std_sum / length)
-
-
-def make_histogram(values, bin_num):
-    max_value = values.max()
-    min_value = values.min()
-    value_range = max_value - min_value
-    step = float(value_range) / float(bin_num - 1)
-    bins = values.map(lambda x: math.floor((x - min_value) / step)) \
-                 .map(lambda x: (x, 1)).reduceByKey(lambda x, y: x + y) \
-                 .collect()
-
-    return bins, min_value, step
+def calculate_median(values, length):
+    values = values.collect()
+    values.sort()
+    if length % 2 == 0:
+        median = (values[int((length / 2) - 1)] + values[int(length / 2)]) / 2
+    else:
+        median = values[int(length / 2)]
+    return median
 
 
 def run_workers(workers):
     start = time.time()
     val, len, sc = start_process(workers, '/data/2020-DAT346-DIT873-TLSD/DATASETS/assignment3.dat')
-    mean = calculate_mean(val, len)
-    print("{0:20s} {1:-3.2f}".format("Mean", mean))
-    std = calculate_std(val, mean, len)
-    print("{0:20s} {1:-3.2f}".format("Standard deviation", std))
-    bins, mini, step = make_histogram(val, 10)
-    print("{0:11s} {1:5s}".format("Bin range", "Occurrences"))
-    bins.sort()
-    for tuple in bins:
-        print("{0:.2f} - {1:.2f} {2:-5d}".format(mini + tuple[0] * step, (mini + tuple[0] * step)
-                                                 + step - 0.0001, tuple[1]))
+    median = calculate_median(val, len)
+    print("{0:15s} {1:-8.2f}".format("Median", median))
     sc.stop()
     end = time.time()
     duration = end - start
@@ -79,7 +58,7 @@ def main_multiprocessing():
     axes[1].plot(cores, durations, "bo-", label="Actual time")
     axes[1].legend()
 
-    plt.savefig("problem2a.png")
+    plt.savefig("problem2b.png")
     # plt.show()
 
 
