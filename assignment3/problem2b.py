@@ -23,7 +23,7 @@ def run_workers(workers):
     start = time.time()
     val, len, sc = start_process(workers, '/data/2020-DAT346-DIT873-TLSD/DATASETS/assignment3.dat')
     median = calculate_median(val, len)
-    print("{0:15s} {1:-8.2f}".format("Median", median))
+    print("{0:15s} {1:-8.5f}".format("Median", median))
     sc.stop()
     end = time.time()
     duration = end - start

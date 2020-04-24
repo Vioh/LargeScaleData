@@ -25,25 +25,28 @@ def make_histogram(values, bin_num):
     max_value = values.max()
     min_value = values.min()
     value_range = max_value - min_value
-    step = float(value_range) / float(bin_num - 1)
-    bins = values.map(lambda x: math.floor((x - min_value) / step)) \
+    step = float(value_range) / float(bin_num)
+    bins = values.map(lambda x: (bin_num - 1) if x == max_value else
+                      math.floor((x - min_value) / step)) \
                  .map(lambda x: (x, 1)).reduceByKey(lambda x, y: x + y) \
                  .sortByKey().collect()
-    return bins, min_value, step
+    return bins, min_value, max_value, step
 
 
 def run_workers(workers):
     start = time.time()
-    val, len, sc = start_process(workers, '/data/2020-DAT346-DIT873-TLSD/DATASETS/assignment3.dat')
-    mean = calculate_mean(val, len)
-    print("{0:20s} {1:-3.2f}".format("Mean", mean))
-    std = calculate_std(val, mean, len)
-    print("{0:20s} {1:-3.2f}".format("Standard deviation", std))
-    bins, mini, step = make_histogram(val, 10)
-    print("{0:11s} {1:5s}".format("Bin range", "Occurrences"))
-    for tuple in bins:
-        print("{0:.2f} - {1:.2f} {2:-5d}".format(mini + tuple[0] * step, (mini + tuple[0] * step)
-                                                 + step - 0.0001, tuple[1]))
+    val, length, sc = start_process(workers, '/data/2020-DAT346-DIT873-TLSD/DATASETS/assignment3.dat')
+    mean = calculate_mean(val, length)
+    print("{0:20s} {1:-3.5f}".format("Mean", mean))
+    std = calculate_std(val, mean, length)
+    print("{0:20s} {1:-3.5f}".format("Standard deviation", std))
+    bins, mini, maxi, step = make_histogram(val, 10)
+    print("{0:20s} {1:-3.5f}".format("Min value", mini))
+    print("{0:20s} {1:-3.5f}".format("Max value", maxi))
+    print("{0:11s} {1:10s}".format("Bin range", "Occurrences"))
+    for tup in bins:
+        print("{0:.2f} - {1:.2f} {2:-10d}".format(mini + tup[0] * step, (mini + tup[0] * step)
+                                                  + step - 0.0001, tup[1]))
     sc.stop()
     end = time.time()
     duration = end - start
