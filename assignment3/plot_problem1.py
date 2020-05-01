@@ -26,6 +26,10 @@ def main(args):
     theoretical_durations = [(durations[0] / core) for core in cores]
     speedups = [(durations[0] / duration) for duration in durations]
 
+    f = 0.8
+    amdahl_speedups = [1/((1-f)+(f/core)) for core in cores]
+    amdahl_durations = [(durations[0]/speedup) for speedup in amdahl_speedups]
+
     fig, axes = plt.subplots(1, 2)
     fig.set_size_inches(12, 6)
     fig.suptitle("Statistics computation performance with MRJob")
@@ -34,7 +38,8 @@ def main(args):
     axes[0].set_xscale("log", basex=2)
     axes[0].set_xlabel("Cores")
     axes[0].set_ylabel("Speedup")
-    axes[0].plot(cores, cores, "ro-", label="Theoretical speedup")
+    axes[0].plot(cores, cores, "ro-", label="Theoretical speedup (100% in parallel)")
+    axes[0].plot(cores, amdahl_speedups, "mo-", label="Theoretical speedup (80% in parallel)")
     axes[0].plot(cores, speedups, "bo-", label="Actual speedup")
     axes[0].legend()
 
@@ -42,7 +47,8 @@ def main(args):
     axes[1].set_xscale("log", basex=2)
     axes[1].set_xlabel("Cores")
     axes[1].set_ylabel("Time taken (s)")
-    axes[1].plot(cores, theoretical_durations, "ro-", label="Theoretical time")
+    axes[1].plot(cores, theoretical_durations, "ro-", label="Theoretical time (100% in parallel)")
+    axes[1].plot(cores, amdahl_durations, "mo-", label="Theoretical time (80% in parallel")
     axes[1].plot(cores, durations, "bo-", label="Actual time")
     axes[1].legend()
 
@@ -63,4 +69,3 @@ if __name__ == "__main__":
     known_args, other_args = parser.parse_known_args()
     sys.argv = sys.argv[:1] + other_args
     main(known_args)
-
