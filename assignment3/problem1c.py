@@ -49,7 +49,14 @@ def main(args):
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="Plot empirical computational complexity")
+
+    examples = """Examples of usage:
+        python problem1c.py -l best /data/2020-DAT346-DIT873-TLSD/DATASETS/assignment3.dat
+    """
+    parser = argparse.ArgumentParser(description="Plot empirical computational complexity for problem1a.py",
+                                     formatter_class=argparse.RawDescriptionHelpFormatter,
+                                     epilog=examples)
+
     parser.add_argument("--label", "-l",
                         default=None,
                         type=str,

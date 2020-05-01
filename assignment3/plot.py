@@ -61,7 +61,16 @@ def main(args):
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="Plot speedup graph for problem 1")
+
+    examples = """Examples of usage:
+        python plot.py -s problem1a.py /data/2020-DAT346-DIT873-TLSD/DATASETS/assignment3.dat
+        python plot.py -s problem1e.py /data/2020-DAT346-DIT873-TLSD/DATASETS/assignment3.dat
+        python plot.py -s problem1.py /data/2020-DAT346-DIT873-TLSD/DATASETS/assignment3.dat
+        python plot.py -o out.png -s problem1.py /data/2020-DAT346-DIT873-TLSD/DATASETS/assignment3.dat
+    """
+    parser = argparse.ArgumentParser(description="Plot speedup graph for problem 1",
+                                     formatter_class=argparse.RawDescriptionHelpFormatter,
+                                     epilog=examples)
     parser.add_argument("--output", "-o",
                         default=None,
                         type=str,
