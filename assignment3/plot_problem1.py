@@ -8,7 +8,7 @@ from datetime import datetime
 
 def compute(num_cores):
     script_path = os.path.dirname(os.path.abspath(__file__)) + "/problem1.py"
-    script_args = ["--local-tmp-dir", "output", "--runner", "local", "--num-cores", str(num_cores)] + sys.argv
+    script_args = ["--local-tmp-dir", "output", "--runner", "local", "--num-cores", str(num_cores)] + sys.argv[1:]
     command = ["python3", script_path] + script_args
 
     start_time = time.time()
@@ -60,5 +60,7 @@ if __name__ == "__main__":
                         default=None,
                         type=str,
                         help="Name of the file to output the plot (optional)")
-    known_args, sys.argv = parser.parse_known_args()
+    known_args, other_args = parser.parse_known_args()
+    sys.argv = sys.argv[:1] + other_args
     main(known_args)
+
