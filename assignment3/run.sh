@@ -14,5 +14,7 @@ data_file=/data/2020-DAT346-DIT873-TLSD/DATASETS/assignment3.dat
 script_name=${1}
 
 export SLURM_JOB_CPUS_PER_NODE=32
+export PYTHONUNBUFFERED=TRUE
+
 sbatch --cpus-per-task=32 --output output/${label}${now}.out /opt/local/bin/run_job.sh \
         plot.py -o output/${label}${now}.png -s ${script_name} ${data_file}
