@@ -3,11 +3,13 @@ import sys
 import time
 import argparse
 import matplotlib.pyplot as plt
+from datetime import datetime
 
 
 def compute(num_cores):
     script_path = os.path.dirname(os.path.abspath(__file__)) + "/problem1.py"
-    command = ["python3", script_path, "--runner", "local", "--num-cores", str(num_cores)] + sys.argv[1:]
+    script_args = ["--local-tmp-dir", "output", "--runner", "local", "--num-cores", str(num_cores)] + sys.argv
+    command = ["python3", script_path] + script_args
 
     start_time = time.time()
     os.system(" ".join(command))
@@ -18,7 +20,7 @@ def compute(num_cores):
     return duration
 
 
-def main():
+def main(args):
     cores = [1, 2, 4, 8, 16, 32]
     durations = [compute(core) for core in cores]
     theoretical_durations = [(durations[0] / core) for core in cores]
@@ -44,21 +46,19 @@ def main():
     axes[1].plot(cores, durations, "bo-", label="Actual time")
     axes[1].legend()
 
-    plt.savefig("problem1.png")
+    if args.output is None:
+        now = datetime.today().strftime("%y%m%d_%H%M%S")
+        plt.savefig(os.path.dirname(os.path.abspath(__file__)) + "/output/" + now + ".png")
+    else:
+        plt.savefig(os.path.dirname(os.path.abspath(__file__)) + "/" + args.output)
     plt.show()
 
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Plot speedup graph for problem 1")
-    parser.add_argument("--group", "-g",
+    parser.add_argument("--output", "-o",
                         default=None,
-                        type = int,
-                        help="Group to compute statistics on")
-    parser.add_argument("--bins", "-b",
-                        default=10,
-                        type = int,
-                        help="Number of bins to plot histogram")
-    parser.add_argument("filepath",
-                        help="File to be processed")
-    parser.parse_args()
-    main()
+                        type=str,
+                        help="Name of the file to output the plot (optional)")
+    known_args, sys.argv = parser.parse_known_args()
+    main(known_args)
