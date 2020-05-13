@@ -1,0 +1,155 @@
+<?xml version="1.0"?>
+<rdf:RDF xmlns="http://www.semanticweb.org/eera/ontologies/2020/4/assignment4_1a#"
+     xml:base="http://www.semanticweb.org/eera/ontologies/2020/4/assignment4_1a"
+     xmlns:owl="http://www.w3.org/2002/07/owl#"
+     xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+     xmlns:xml="http://www.w3.org/XML/1998/namespace"
+     xmlns:xsd="http://www.w3.org/2001/XMLSchema#"
+     xmlns:rdfs="http://www.w3.org/2000/01/rdf-schema#">
+    <owl:Ontology rdf:about="http://www.semanticweb.org/eera/ontologies/2020/4/assignment4_1a"/>
+    
+
+
+    <!-- 
+    ///////////////////////////////////////////////////////////////////////////////////////
+    //
+    // Object Properties
+    //
+    ///////////////////////////////////////////////////////////////////////////////////////
+     -->
+
+    
+
+
+    <!-- http://www.semanticweb.org/eera/ontologies/2020/4/assignment4_1a#alumnusOf -->
+
+    <owl:ObjectProperty rdf:about="http://www.semanticweb.org/eera/ontologies/2020/4/assignment4_1a#alumnusOf">
+        <rdfs:domain rdf:resource="http://www.semanticweb.org/eera/ontologies/2020/4/assignment4_1a#Person"/>
+        <rdfs:range rdf:resource="http://www.semanticweb.org/eera/ontologies/2020/4/assignment4_1a#University"/>
+    </owl:ObjectProperty>
+    
+
+
+    <!-- http://www.semanticweb.org/eera/ontologies/2020/4/assignment4_1a#bornIn -->
+
+    <owl:ObjectProperty rdf:about="http://www.semanticweb.org/eera/ontologies/2020/4/assignment4_1a#bornIn">
+        <rdfs:domain rdf:resource="http://www.semanticweb.org/eera/ontologies/2020/4/assignment4_1a#Person"/>
+        <rdfs:range rdf:resource="http://www.semanticweb.org/eera/ontologies/2020/4/assignment4_1a#Place"/>
+    </owl:ObjectProperty>
+    
+
+
+    <!-- http://www.semanticweb.org/eera/ontologies/2020/4/assignment4_1a#employeeOf -->
+
+    <owl:ObjectProperty rdf:about="http://www.semanticweb.org/eera/ontologies/2020/4/assignment4_1a#employeeOf">
+        <rdfs:domain rdf:resource="http://www.semanticweb.org/eera/ontologies/2020/4/assignment4_1a#Person"/>
+        <rdfs:range rdf:resource="http://www.semanticweb.org/eera/ontologies/2020/4/assignment4_1a#Organisation"/>
+    </owl:ObjectProperty>
+    
+
+
+    <!-- http://www.semanticweb.org/eera/ontologies/2020/4/assignment4_1a#locatedIn -->
+
+    <owl:ObjectProperty rdf:about="http://www.semanticweb.org/eera/ontologies/2020/4/assignment4_1a#locatedIn">
+        <rdfs:domain rdf:resource="http://www.semanticweb.org/eera/ontologies/2020/4/assignment4_1a#Organisation"/>
+        <rdfs:range rdf:resource="http://www.semanticweb.org/eera/ontologies/2020/4/assignment4_1a#Place"/>
+    </owl:ObjectProperty>
+    
+
+
+    <!-- 
+    ///////////////////////////////////////////////////////////////////////////////////////
+    //
+    // Data properties
+    //
+    ///////////////////////////////////////////////////////////////////////////////////////
+     -->
+
+    
+
+
+    <!-- http://www.semanticweb.org/eera/ontologies/2020/4/assignment4_1a#countryName -->
+
+    <owl:DatatypeProperty rdf:about="http://www.semanticweb.org/eera/ontologies/2020/4/assignment4_1a#countryName">
+        <rdfs:domain rdf:resource="http://www.semanticweb.org/eera/ontologies/2020/4/assignment4_1a#Place"/>
+        <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#string"/>
+    </owl:DatatypeProperty>
+    
+
+
+    <!-- http://www.semanticweb.org/eera/ontologies/2020/4/assignment4_1a#organisationName -->
+
+    <owl:DatatypeProperty rdf:about="http://www.semanticweb.org/eera/ontologies/2020/4/assignment4_1a#organisationName">
+        <rdfs:subPropertyOf rdf:resource="http://www.w3.org/2002/07/owl#topDataProperty"/>
+        <rdfs:domain rdf:resource="http://www.semanticweb.org/eera/ontologies/2020/4/assignment4_1a#Organisation"/>
+    </owl:DatatypeProperty>
+    
+
+
+    <!-- http://www.semanticweb.org/eera/ontologies/2020/4/assignment4_1a#personName -->
+
+    <owl:DatatypeProperty rdf:about="http://www.semanticweb.org/eera/ontologies/2020/4/assignment4_1a#personName">
+        <rdfs:domain rdf:resource="http://www.semanticweb.org/eera/ontologies/2020/4/assignment4_1a#Person"/>
+        <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#string"/>
+    </owl:DatatypeProperty>
+    
+
+
+    <!-- http://www.semanticweb.org/eera/ontologies/2020/4/assignment4_1a#placeName -->
+
+    <owl:DatatypeProperty rdf:about="http://www.semanticweb.org/eera/ontologies/2020/4/assignment4_1a#placeName">
+        <rdfs:domain rdf:resource="http://www.semanticweb.org/eera/ontologies/2020/4/assignment4_1a#Place"/>
+        <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#string"/>
+    </owl:DatatypeProperty>
+    
+
+
+    <!-- http://www.semanticweb.org/eera/ontologies/2020/4/assignment4_1a#yearFounded -->
+
+    <owl:DatatypeProperty rdf:about="http://www.semanticweb.org/eera/ontologies/2020/4/assignment4_1a#yearFounded">
+        <rdfs:domain rdf:resource="http://www.semanticweb.org/eera/ontologies/2020/4/assignment4_1a#University"/>
+        <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#positiveInteger"/>
+    </owl:DatatypeProperty>
+    
+
+
+    <!-- 
+    ///////////////////////////////////////////////////////////////////////////////////////
+    //
+    // Classes
+    //
+    ///////////////////////////////////////////////////////////////////////////////////////
+     -->
+
+    
+
+
+    <!-- http://www.semanticweb.org/eera/ontologies/2020/4/assignment4_1a#Organisation -->
+
+    <owl:Class rdf:about="http://www.semanticweb.org/eera/ontologies/2020/4/assignment4_1a#Organisation"/>
+    
+
+
+    <!-- http://www.semanticweb.org/eera/ontologies/2020/4/assignment4_1a#Person -->
+
+    <owl:Class rdf:about="http://www.semanticweb.org/eera/ontologies/2020/4/assignment4_1a#Person"/>
+    
+
+
+    <!-- http://www.semanticweb.org/eera/ontologies/2020/4/assignment4_1a#Place -->
+
+    <owl:Class rdf:about="http://www.semanticweb.org/eera/ontologies/2020/4/assignment4_1a#Place"/>
+    
+
+
+    <!-- http://www.semanticweb.org/eera/ontologies/2020/4/assignment4_1a#University -->
+
+    <owl:Class rdf:about="http://www.semanticweb.org/eera/ontologies/2020/4/assignment4_1a#University">
+        <rdfs:subClassOf rdf:resource="http://www.semanticweb.org/eera/ontologies/2020/4/assignment4_1a#Organisation"/>
+    </owl:Class>
+</rdf:RDF>
+
+
+
+<!-- Generated by the OWL API (version 4.5.9.2019-02-01T07:24:44Z) https://github.com/owlcs/owlapi -->
+
