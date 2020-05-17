@@ -9,9 +9,9 @@ from SPARQLWrapper import SPARQLWrapper, JSON
 OUTPUT = "output"
 CACHE = f"{OUTPUT}/cache.json"
 
-############################################################################
+##########################################################################################
 # UTILITY METHODS
-############################################################################
+##########################################################################################
 
 def print_results(description, *results):
     print("\n==========================================================================")
@@ -41,13 +41,14 @@ def query_data(endpoint, query):
     results = sparql.query().convert()
     return results
 
-############################################################################
+##########################################################################################
 # DATA QUERYING
-############################################################################
+##########################################################################################
 
 ENDPOINT = "https://query.wikidata.org/sparql"
 
 QUERY = """
+    PREFIX dbpo: <http://dbpedia.org/ontology/>
     PREFIX dbpprop: <http://dbpedia.org/property/>
     PREFIX foaf: <http://xmlns.com/foaf/0.1/>
     PREFIX nobel: <http://data.nobelprize.org/terms/>
@@ -57,6 +58,7 @@ QUERY = """
 
     SELECT DISTINCT ?laureateName ?gender ?fieldName
                     ?birthYear ?deathYear ?awardYear
+                    ?country ?countryGdpRanking
     WHERE {
         SERVICE <http://data.nobelprize.org/sparql> {
             ?laureate rdf:type nobel:Laureate.
@@ -75,6 +77,28 @@ QUERY = """
 
             ?award nobel:category ?field.
             ?field rdfs:label ?fieldName.
+
+            ?laureate dbpo:birthPlace ?birthPlace.
+            ?birthPlace rdf:type dbpo:Country.
+            ?birthPlace rdfs:label ?country.
+            ?birthPlace (owl:sameAs|dbpo:successor) ?countryUri.
+
+            # Work around for Netherlands (because of typo in the nobelprize dataset)
+            BIND(IF(?countryUri=<http://dbpedia.org/resource/the_Netherlands>,
+                    <http://dbpedia.org/resource/The_Netherlands>,
+                    ?countryUri) AS ?countryDbpedia)
+        }
+        OPTIONAL {
+            SERVICE <http://dbpedia.org/sparql> {
+                {
+                    ?countryDbpedia <http://dbpedia.org/property/gdpPppPerCapitaRank> ?countryGdpRanking.
+                }
+                UNION
+                {
+                    ?countryDbpedia dbpo:wikiPageRedirects ?redirectUri.
+                    ?redirectUri <http://dbpedia.org/property/gdpPppPerCapitaRank> ?countryGdpRanking.
+                }
+            }
         }
     }
 """
@@ -90,6 +114,7 @@ def extract_dataframe(data):
     df["birthYear"] = pd.to_numeric(df["birthYear"]).astype("Int32")
     df["awardYear"] = pd.to_numeric(df["awardYear"]).astype("Int32")
     df["deathYear"] = pd.to_numeric(df["deathYear"]).astype("Int32")
+    df["countryGdpRanking"] = pd.to_numeric(df["countryGdpRanking"]).astype("Int32")
 
     print(f"Number of rows extracted: {len(rows)}")
     return df
@@ -102,9 +127,9 @@ def fetch_data():
         write_json(CACHE, data)
     return extract_dataframe(data)
 
-############################################################################
+##########################################################################################
 # Question 1: What's the gender distribution among Nobel laureates?
-############################################################################
+##########################################################################################
 
 def question1():
     description = "What's the gender distribution among Nobel laureates?"
@@ -130,9 +155,9 @@ def question1():
     plt.savefig(f"{OUTPUT}/question1.png")
     plt.show()
 
-############################################################################
+##########################################################################################
 # Question 2: What's the average age of Nobel laureates at time of their awards?
-############################################################################
+##########################################################################################
 
 def question2():
     description = "What's the average age of Nobel laureates at time of their awards?"
@@ -156,9 +181,9 @@ def question2():
     plt.savefig(f"{OUTPUT}/question2.png")
     plt.show()
 
-############################################################################
+##########################################################################################
 # Question 3: Were there any Nobel laureates who were posthumously awarded?
-############################################################################
+##########################################################################################
 
 def question3():
     description = "Were there any Nobel laureates who were posthumously awarded?"
@@ -167,9 +192,38 @@ def question3():
     posthumously_awarded = (df["deathYear"] - df["awardYear"] <= 0)
     print_results(description, df[posthumously_awarded])
 
-############################################################################
+##########################################################################################
+# Question 4: What's the average GDP ranking of countries where Nobel laureates were born?
+##########################################################################################
+
+def question4():
+    description = "What's the average GDP ranking of countries where Nobel laureates were born?"
+    df = fetch_data()
+    n_total = df.shape[0]
+
+    # Filter out all missing values from the GDP ranking
+    df = df[~pd.isnull(df["countryGdpRanking"])]
+    n_left = df.shape[0]
+
+    average_ranking = df.groupby(["fieldName"])["countryGdpRanking"].mean()
+    average_ranking.loc["All"] = df["countryGdpRanking"].mean()
+    print_results(description, f"Result based on {n_left}/{n_total} datapoints!\n", average_ranking)
+
+    fontsize = 14
+    plt.figure(figsize=(10,8))
+    average_ranking.plot.bar(rot=60, fontsize=fontsize)
+
+    plt.title(description, fontsize=fontsize)
+    plt.xlabel("")
+    plt.ylabel("Average GDP Ranking", fontsize=fontsize)
+    plt.tight_layout()
+
+    plt.savefig(f"{OUTPUT}/question4.png")
+    plt.show()
+
+##########################################################################################
 # MAIN
-############################################################################
+##########################################################################################
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Investigate data about Nobel price winners.")
@@ -188,6 +242,7 @@ if __name__ == "__main__":
     question1()
     question2()
     question3()
+    question4()
 
     if args.clear_cache_after:
         clear_cache()
