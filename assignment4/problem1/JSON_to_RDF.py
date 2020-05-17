@@ -32,7 +32,7 @@ def add_university(uni_list):
                     "assignment4_1a#University\"/>\n"
             line += "<locatedIn rdf:resource=\"" + prefix + item['location'].replace(' ', '_') + "\"/>\n"
             line += "<organisationName>" + item['universityLabel'].replace(' ', '_') + "</organisationName>\n"
-            line += "<yearFounded>" + item['yearFounded'].replace(' ', '_') + "</yearFounded>\n"
+            line += "<yearFounded>" + item['yearFounded'] + "</yearFounded>\n"
             line += "</owl:NamedIndividual>\n\n"
             txt.write(line)
 
@@ -40,14 +40,26 @@ def add_university(uni_list):
 def add_organisation(al_list):
     with open(text_file, 'a',  encoding="utf-8") as txt:
         for item in al_list:
-            line = "<owl:NamedIndividual rdf:about=\"" + prefix + item['organisationLabel'].replace(' ', '_') \
-                   + "\">\n"
-            line += "<rdf:type rdf:resource=\"http://www.semanticweb.org/eera/ontologies/2020/4/" \
-                    "assignment4_1a#Organisation\"/>\n"
-            line += "<locatedIn rdf:resource=\"" + prefix + item['orgLocationLabel'].replace(' ', '_') + "\"/>\n"
-            line += "<organisationName>" + item['organisationLabel'].replace(' ', '_') + "</organisationName>\n"
-            line += "</owl:NamedIndividual>\n\n"
-            txt.write(line)
+            if 'University' in item['organisationLabel'] or 'Institute' in item['organisationLabel']:
+                line = "<owl:NamedIndividual rdf:about=\"" + prefix + item['organisationLabel'].replace(' ', '_') \
+                       + "\">\n"
+                line += "<rdf:type rdf:resource=\"http://www.semanticweb.org/eera/ontologies/2020/4/" \
+                        "assignment4_1a#University\"/>\n"
+                line += "<locatedIn rdf:resource=\"" + prefix + item['orgLocationLabel'].replace(' ', '_') + "\"/>\n"
+                line += "<organisationName>" + item['organisationLabel'].replace(' ', '_') + "</organisationName>\n"
+                if 'yearFounded' in item:
+                    line += "<yearFounded>" + item['yearFounded'] + "</yearFounded>\n"
+                line += "</owl:NamedIndividual>\n\n"
+                txt.write(line)
+            else:
+                line = "<owl:NamedIndividual rdf:about=\"" + prefix + item['organisationLabel'].replace(' ', '_') \
+                       + "\">\n"
+                line += "<rdf:type rdf:resource=\"http://www.semanticweb.org/eera/ontologies/2020/4/" \
+                        "assignment4_1a#Organisation\"/>\n"
+                line += "<locatedIn rdf:resource=\"" + prefix + item['orgLocationLabel'].replace(' ', '_') + "\"/>\n"
+                line += "<organisationName>" + item['organisationLabel'].replace(' ', '_') + "</organisationName>\n"
+                line += "</owl:NamedIndividual>\n\n"
+                txt.write(line)
 
 
 def add_alumnus(al_list):
@@ -71,6 +83,7 @@ add_place(universities, 'location', 'countryLabel')
 add_university(universities)
 add_place(alumni, 'placeOfBirthLabel', 'pobCountryLabel')
 add_place(alumni, 'orgLocationLabel', 'orgCountryLabel')
+add_organisation(alumni)
 add_alumnus(alumni)
 
 
